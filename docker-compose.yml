@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: personaltraineradvisor
+    environment:
+      POSTGRES_USER: personaltraineradvisor
+      POSTGRES_PASSWORD: personaltraineradvisor
+      POSTGRES_DB: personaltraineradvisor
+    ports:
+      - "5432:5432"
+    volumes:
+      - personaltraineradvisor:/var/lib/postgresql/data
+
+volumes:
+  personaltraineradvisor:
