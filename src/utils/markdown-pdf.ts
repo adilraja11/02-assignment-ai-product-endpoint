@@ -154,9 +154,9 @@ function renderList(
           : "[ ]"
         : "-";
     const labelWidth = 24;
-    const y = doc.y;
 
     ensureSpace(doc, BODY_FONT_SIZE * 2);
+    const y = doc.y;
     doc
       .font("Helvetica")
       .fontSize(BODY_FONT_SIZE)
@@ -210,24 +210,46 @@ function renderCodeBlock(
 ) {
   const width = textWidth(doc, indent);
   const text = token.text.trimEnd();
+  const maxHeight = doc.page.height - doc.page.margins.top - doc.page.margins.bottom - 20;
 
   doc.font("Courier").fontSize(9);
-  const height = doc.heightOfString(text, { width, lineGap: 3 }) + 18;
-  ensureSpace(doc, height);
+  const fullHeight = doc.heightOfString(text, { width: width - 18, lineGap: 3 });
 
+  if (fullHeight + 18 > maxHeight) {
+    const lines = text.split("\n");
+    let buffer: string[] = [];
+    let bufferHeight = 0
+    const lineHeight = doc.currentLineHeight() + 3;
+
+    const flush = () => {
+      if (buffer.length === 0) return;
+      const chunkText = buffer.join("\n");
+      const chunkHeight = doc.heightOfString(chunkText, { width: width - 18, lineGap: 3 }) + 18;
+      ensureSpace(doc, chunkHeight);
+      const x = textX(doc, indent);
+      const y = doc.y;
+      doc.save().roundedRect(x, y, width, chunkHeight, 4).fillAndStroke("#f3f4f6", "#e5e7eb").restore();
+      doc.font("Courier").fontSize(9).fillColor(BODY_COLOR).text(chunkText, x + 9, y + 9, { width: width - 18, lineGap: 3 });
+      doc.y = y + chunkHeight + 8;
+      buffer = [];
+      bufferHeight = 0;
+    };
+
+    for (const line of lines) {
+      if (bufferHeight + lineHeight > maxHeight - 18) flush();
+      buffer.push(line);
+      bufferHeight += lineHeight;
+    }
+    flush();
+    return;
+  }
+
+  const height = fullHeight + 18;
+  ensureSpace(doc, height);
   const x = textX(doc, indent);
   const y = doc.y;
-
-  doc
-    .save()
-    .roundedRect(x, y, width, height, 4)
-    .fillAndStroke("#f3f4f6", "#e5e7eb")
-    .restore();
-  doc
-    .font("Courier")
-    .fontSize(9)
-    .fillColor(BODY_COLOR)
-    .text(text, x + 9, y + 9, { width: width - 18, lineGap: 3 });
+  doc.save().roundedRect(x, y, width, height, 4).fillAndStroke("#f3f4f6", "#e5e7eb").restore();
+  doc.font("Courier").fontSize(9).fillColor(BODY_COLOR).text(text, x + 9, y + 9, { width: width - 18, lineGap: 3 });
   doc.y = y + height + 8;
 }
 
@@ -269,6 +291,7 @@ function renderTable(
 
 function addPageNumbers(doc: PDFKit.PDFDocument) {
   const pageRange = doc.bufferedPageRange();
+  const bottomMargin = doc.page.margins.bottom;
 
   for (
     let pageIndex = pageRange.start;
@@ -276,6 +299,7 @@ function addPageNumbers(doc: PDFKit.PDFDocument) {
     pageIndex += 1
   ) {
     doc.switchToPage(pageIndex);
+    doc.page.margins.bottom = 0;
     doc
       .font("Helvetica")
       .fontSize(9)
@@ -289,6 +313,7 @@ function addPageNumbers(doc: PDFKit.PDFDocument) {
           width: contentWidth(doc),
         },
       );
+    doc.page.margins.bottom = bottomMargin;
   }
 }
 

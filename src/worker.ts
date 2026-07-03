@@ -37,7 +37,7 @@ PERSONALTRAINER_ADVISOR_QUEUE_NAME,
 
     await mkdir("reports", { recursive: true });
 
-    const filePath = `reports/${job.data.id}.pdf`;
+    const filePath = `reports/${job.data.id}- ${job.data.fullName}.pdf`;
 
     try {
       await writeMarkdownPdf(finalVerdicts, filePath);

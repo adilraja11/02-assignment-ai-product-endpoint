@@ -11,7 +11,7 @@ export async function generatePerspective(
     baseUrl: 'https://openrouter.ai/api/v1',
     apiKey: OPENROUTER_API_KEY
    });
-  const model = client.completionModel("gpt-5.4-mini");
+  const model = client.completionModel("claude-haiku-4.5");
   const response = await createCompletion(model, {
     instructions,
     input: context,
