@@ -3,5 +3,6 @@ allowBuilds:
   esbuild: false
   msgpackr-extract: false
   prisma: false
+  unrs-resolver: false
 minimumReleaseAgeExclude:
   - '@hono/node-server@2.0.8'

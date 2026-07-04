@@ -5,6 +5,7 @@ import "dotenv/config";
 import { mkdir } from "node:fs/promises";
 import { writeMarkdownPdf } from "./utils/markdown-pdf.js";
 import { getBaseFitnessAdvisorPrompt, getBaselineAnalysisPrompt, getNutritionBlueprintPrompt, getTrainingStrategyPrompt } from "./modules/research/prompts.js";
+import { prisma } from "./utils/prisma.js";
 
 export const worker = new Worker(
 PERSONALTRAINER_ADVISOR_QUEUE_NAME,
@@ -37,11 +38,16 @@ PERSONALTRAINER_ADVISOR_QUEUE_NAME,
 
     await mkdir("reports", { recursive: true });
 
-    const filePath = `reports/${job.data.id}- ${job.data.fullName}.pdf`;
+    const filePath = `reports/${job.data.id} - ${job.data.fullName}.pdf`;
 
     try {
       await writeMarkdownPdf(finalVerdicts, filePath);
       console.log(`Report generated at ${filePath}`);
+
+      await prisma.research.update({
+        where: { id: job.data.id },
+        data: { isCompleted: true },
+      });
     } catch (error) {
       console.error(`Failed to generate report at ${filePath}`, error);
       throw error;

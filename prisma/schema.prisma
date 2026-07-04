@@ -24,4 +24,5 @@ model Research {
   dailyActivityLevel String
   pastInjuries String?
   mainGoal String
+  isCompleted Boolean @default(false)
 }
